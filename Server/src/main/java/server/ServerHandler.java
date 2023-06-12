@@ -1,6 +1,7 @@
 package server;
 
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import org.apache.logging.log4j.LogManager;
@@ -18,8 +19,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class ServerHandler extends SimpleChannelInboundHandler<String> {
     private static final Logger LOGGER = LogManager.getLogger(Server.class);
-    private final int int_random = ThreadLocalRandom.current().nextInt();
-    private final String clientName = "Client " + int_random;
+
     private final DateTimeFormatter dateTimeFormat = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
     private final LocalDateTime now = LocalDateTime.now();
     private final String timeOfConnection = dateTimeFormat.format(now);
@@ -35,6 +35,9 @@ public class ServerHandler extends SimpleChannelInboundHandler<String> {
     public void channelActive(final ChannelHandlerContext channelHandlerContext) {
         LOGGER.info("Client joined - " + channelHandlerContext);
         channels.add(channelHandlerContext.channel());
+        for (Channel eachChannel : channels) {
+            eachChannel.writeAndFlush("Client connected know it");
+        }
     }
 
     /*
@@ -47,7 +50,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<String> {
     public void channelRead0(ChannelHandlerContext channelHandlerContext, String msg) {
         LOGGER.info("Server received - " + msg);
         for (Channel eachChannel : channels) {
-            eachChannel.writeAndFlush("-> " + msg + '\n');
+            eachChannel.writeAndFlush("-> " + msg + '\n').addListener(ChannelFutureListener.CLOSE);//&&&&
         }
     }
 
@@ -57,7 +60,8 @@ public class ServerHandler extends SimpleChannelInboundHandler<String> {
      */
     @Override
     public void exceptionCaught(ChannelHandlerContext channelHandlerContext, Throwable cause) {
-        LOGGER.info("Closing connection for client - " + channelHandlerContext);
+        LOGGER.info("Closing connection for client XXXXXX- " + channelHandlerContext);
+        cause.printStackTrace();
         channelHandlerContext.close();
     }
 }

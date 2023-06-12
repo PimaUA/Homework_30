@@ -7,35 +7,34 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.jmx.Server;
 
 import java.util.Scanner;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class Client {
-    static final String HOST = "127.0.0.1";
-    static final int PORT = 5555;
-    static String clientName;
+    private static final Logger LOGGER = LogManager.getLogger(Server.class);
+   // private String host;        //"127.0.0.1";
+   // private int port;           //5555;
+    private final int int_random = ThreadLocalRandom.current().nextInt();
+    private final String clientName = "Client " + int_random;
+    private Bootstrap bootstrap;
 
-    public static void main(String[] args) throws InterruptedException {
+    public Client() {
+        bootstrap = new Bootstrap();
+    }
 
-        /*
-         * Get name of the user for this chat session.
-         */
-        Scanner scanner = new Scanner(System.in);
-        System.out.println("Please enter your name: ");
-        if (scanner.hasNext()) {
-            clientName = scanner.nextLine();
-            System.out.println("Welcome " + clientName);
-        }
-
+    public void connect(String host, int port,String msg) throws Exception {
         /*
          * Configure the client.
          */
-
         // Since this is client, it doesn't need boss group. Create single group.
         EventLoopGroup group = new NioEventLoopGroup();
         try {
-            Bootstrap b = new Bootstrap();
-            b.group(group) // Set EventLoopGroup to handle all eventsf for client.
+            bootstrap = new Bootstrap();
+            bootstrap.group(group) // Set EventLoopGroup to handle all events for client.
                     .channel(NioSocketChannel.class)// Use NIO to accept new connections.
                     .handler(new ChannelInitializer<SocketChannel>() {
                         @Override
@@ -53,25 +52,30 @@ public class Client {
 
                         }
                     });
+// Start the client.
+            ChannelFuture f = bootstrap.connect(host, port).sync();
 
-            // Start the client.
-            ChannelFuture f = b.connect(HOST, PORT).sync();
+            //
+            Channel channel = f.sync().channel();
+            channel.writeAndFlush(msg);
+            channel.flush();
 
-            /*
-             * Iterate & take chat message inputs from user & then send to server.
-             */
-            while (scanner.hasNext()) {
-                String input = scanner.nextLine();
-                Channel channel = f.sync().channel();
-                channel.writeAndFlush("[" + clientName + "]: " + input);
-                channel.flush();
-            }
-
-            // Wait until the connection is closed.
+// Wait until the connection is closed(port)
             f.channel().closeFuture().sync();
+            LOGGER.info("port closed");
+
         } finally {
             // Shut down the event loop to terminate all threads.
             group.shutdownGracefully();
+            LOGGER.info("final");
         }
+    }
+
+    public static void main(String[] args) throws Exception {
+Client client1=new Client();
+client1.connect("127.0.0.1",5555,"Hey Ho");
+
+        Client client2=new Client();
+        client1.connect("127.0.0.1",5555,"Let's Go!");
     }
 }
