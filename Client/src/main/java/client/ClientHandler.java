@@ -5,8 +5,12 @@ import io.netty.channel.SimpleChannelInboundHandler;
 
 public class ClientHandler extends SimpleChannelInboundHandler<String> {
 
+    /*
+     * Print chat message received from server.
+     */
     @Override
-    protected void channelRead0(ChannelHandlerContext channelHandlerContext, String s) throws Exception {
+    protected void channelRead0(ChannelHandlerContext ctx, String msg)  {
+        System.out.println("Message: " + msg);
 
     }
 }
