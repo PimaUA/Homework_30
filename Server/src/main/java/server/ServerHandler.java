@@ -49,10 +49,26 @@ public class ServerHandler extends SimpleChannelInboundHandler<String> {
     @Override
     public void channelRead0(ChannelHandlerContext channelHandlerContext, String msg) {
         LOGGER.info("Server received - " + msg);
-        for (Channel eachChannel : channels) {
-            eachChannel.writeAndFlush("-> " + msg + '\n').addListener(ChannelFutureListener.CLOSE);//&&&&
-        }
+            while (true){
+            if(msg==null) {
+               break;
+            }
+            else if(msg.equals("-exit")){
+                channelHandlerContext.writeAndFlush("User disconnected").addListener(ChannelFutureListener.CLOSE);
+                LOGGER.info("Closed by user's request");
+                channelHandlerContext.close();
+                break;
+            } else if (msg.equals("-file")) {
+
+            }
+                channelHandlerContext.writeAndFlush("-> " + msg + '\n').addListener(ChannelFutureListener.CLOSE);}
     }
+
+
+
+
+
+
 
     /*
      * In case of exception, close channel. One may choose to custom handle exception

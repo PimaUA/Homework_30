@@ -55,10 +55,12 @@ public class Client {
 // Start the client.
             ChannelFuture f = bootstrap.connect(host, port).sync();
 
-            //
+            //send message to server
             Channel channel = f.sync().channel();
             channel.writeAndFlush(msg);
             channel.flush();
+
+            //or send file to server
 
 // Wait until the connection is closed(port)
             f.channel().closeFuture().sync();
@@ -75,7 +77,7 @@ public class Client {
 Client client1=new Client();
 client1.connect("127.0.0.1",5555,"Hey Ho");
 
-        Client client2=new Client();
-        client1.connect("127.0.0.1",5555,"Let's Go!");
+        //Client client2=new Client();
+        //client2.connect("127.0.0.1",5555,"Let's Go!");
     }
 }
