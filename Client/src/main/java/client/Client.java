@@ -11,6 +11,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.jmx.Server;
 
+import java.io.IOException;
 import java.util.Scanner;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -21,6 +22,7 @@ public class Client {
     private final int int_random = ThreadLocalRandom.current().nextInt();
     private final String clientName = "Client " + int_random;
     private Bootstrap bootstrap;
+    private ChannelFuture f;
 
     public Client() {
         bootstrap = new Bootstrap();
@@ -53,7 +55,7 @@ public class Client {
                         }
                     });
 // Start the client.
-            ChannelFuture f = bootstrap.connect(host, port).sync();
+           f = bootstrap.connect(host, port).sync();
 
             //send message to server
             Channel channel = f.sync().channel();
@@ -73,11 +75,21 @@ public class Client {
         }
     }
 
+    //????
+    public String sendMessage(String msg) throws InterruptedException {
+        Channel channel = f.sync().channel();
+        channel.writeAndFlush(msg);
+        channel.flush();
+        return msg;
+    }
+
     public static void main(String[] args) throws Exception {
 Client client1=new Client();
-client1.connect("127.0.0.1",5555,"Hey Ho");
+//client1.connect("127.0.0.1",5555,"Hey Ho");
+        client1.connect("127.0.0.1",5555,"-file C:/Users/Sasha/Downloads/file1.txt");
 
-        //Client client2=new Client();
+        Client client2=new Client();
         //client2.connect("127.0.0.1",5555,"Let's Go!");
+        client2.connect("127.0.0.1",5555,"-file C:/Users/Sasha/Downloads/file2.txt");
     }
 }

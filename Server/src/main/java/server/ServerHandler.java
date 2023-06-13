@@ -7,6 +7,13 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.channels.FileChannel;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -58,17 +65,29 @@ public class ServerHandler extends SimpleChannelInboundHandler<String> {
                 LOGGER.info("Closed by user's request");
                 channelHandlerContext.close();
                 break;
-            } else if (msg.equals("-file")) {
-
             }
-                channelHandlerContext.writeAndFlush("-> " + msg + '\n').addListener(ChannelFutureListener.CLOSE);}
+            else if (msg.startsWith("-file ")) {
+                String sourcePath=msg.substring(6);
+                copyFile(sourcePath);
+                LOGGER.info("File saved to directory");
+                break;
+            }
+                }
+        channelHandlerContext.writeAndFlush(msg + '\n').addListener(ChannelFutureListener.CLOSE);
     }
 
-
-
-
-
-
+    public void copyFile(String sourcePath) {
+        Path p = Paths.get(sourcePath);
+        String newFileName = p.getFileName().toString();
+        final String pathToDirectory = "C:/IdeaProjects/Homework_30/Server/src/main/resources/SavedFiles";
+        final File dest = new File(pathToDirectory + "/" + newFileName);
+        try (FileChannel sourceChannel = new FileInputStream(sourcePath).getChannel();
+             FileChannel destChannel = new FileOutputStream(dest).getChannel()) {
+            destChannel.transferFrom(sourceChannel, 0, sourceChannel.size());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     /*
      * In case of exception, close channel. One may choose to custom handle exception
