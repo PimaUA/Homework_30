@@ -17,12 +17,9 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class Client {
     private static final Logger LOGGER = LogManager.getLogger(Server.class);
-   // private String host;        //"127.0.0.1";
-   // private int port;           //5555;
-    private final int int_random = ThreadLocalRandom.current().nextInt();
-    private final String clientName = "Client " + int_random;
     private Bootstrap bootstrap;
     private ChannelFuture f;
+
 
     public Client() {
         bootstrap = new Bootstrap();
@@ -55,28 +52,26 @@ public class Client {
                         }
                     });
 // Start the client.
-           f = bootstrap.connect(host, port).sync();
+          ChannelFuture f = bootstrap.connect(host, port).sync();
 
             //send message to server
             Channel channel = f.sync().channel();
             channel.writeAndFlush(msg);
             channel.flush();
 
-            //or send file to server
-
 // Wait until the connection is closed(port)
             f.channel().closeFuture().sync();
-            LOGGER.info("port closed");
 
         } finally {
             // Shut down the event loop to terminate all threads.
             group.shutdownGracefully();
-            LOGGER.info("final");
         }
     }
 
+
+
     //????
-    public String sendMessage(String msg) throws InterruptedException {
+    public String sendCommand(String msg) throws InterruptedException {
         Channel channel = f.sync().channel();
         channel.writeAndFlush(msg);
         channel.flush();
@@ -85,11 +80,11 @@ public class Client {
 
     public static void main(String[] args) throws Exception {
 Client client1=new Client();
-//client1.connect("127.0.0.1",5555,"Hey Ho");
-        client1.connect("127.0.0.1",5555,"-file C:/Users/Sasha/Downloads/file1.txt");
+client1.connect("127.0.0.1",5555,"Hey Ho");
+        //client1.connect("127.0.0.1",5555,"-file C:/Users/Sasha/Downloads/file1.txt");
 
         Client client2=new Client();
-        //client2.connect("127.0.0.1",5555,"Let's Go!");
-        client2.connect("127.0.0.1",5555,"-file C:/Users/Sasha/Downloads/file2.txt");
+        client2.connect("127.0.0.1",5555,"Let's Go!");
+        //client2.connect("127.0.0.1",5555,"-file C:/Users/Sasha/Downloads/file2.txt");
     }
 }

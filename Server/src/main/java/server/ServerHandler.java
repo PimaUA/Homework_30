@@ -1,5 +1,6 @@
 package server;
 
+import client.ClientHandler;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
@@ -17,6 +18,7 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -26,10 +28,8 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class ServerHandler extends SimpleChannelInboundHandler<String> {
     private static final Logger LOGGER = LogManager.getLogger(Server.class);
+    private static final HashSet<ClientHandler> serverClients = new HashSet<>();
 
-    private final DateTimeFormatter dateTimeFormat = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
-    private final LocalDateTime now = LocalDateTime.now();
-    private final String timeOfConnection = dateTimeFormat.format(now);
 
     // List of connected client channels.
     static final List<Channel> channels = new ArrayList<>();
@@ -40,10 +40,12 @@ public class ServerHandler extends SimpleChannelInboundHandler<String> {
      */
     @Override
     public void channelActive(final ChannelHandlerContext channelHandlerContext) {
-        LOGGER.info("Client joined - " + channelHandlerContext);
+        ClientHandler eachClient = new ClientHandler();
+        serverClients.add(eachClient);
+        LOGGER.info("Client  " + eachClient.getClientName()+" added to serverClients list");
         channels.add(channelHandlerContext.channel());
         for (Channel eachChannel : channels) {
-            eachChannel.writeAndFlush("Client connected know it");
+            eachChannel.writeAndFlush(eachClient.getClientName()+" successfully connected to server\n");
         }
     }
 
@@ -62,7 +64,8 @@ public class ServerHandler extends SimpleChannelInboundHandler<String> {
             }
             else if(msg.equals("-exit")){
                 channelHandlerContext.writeAndFlush("User disconnected").addListener(ChannelFutureListener.CLOSE);
-                LOGGER.info("Closed by user's request");
+                serverClients.remove(this);
+                LOGGER.info(this + " have been removed from list of active connections");
                 channelHandlerContext.close();
                 break;
             }
@@ -72,8 +75,10 @@ public class ServerHandler extends SimpleChannelInboundHandler<String> {
                 LOGGER.info("File saved to directory");
                 break;
             }
+                channelHandlerContext.writeAndFlush("Server received message "+msg + '\n')
+                        .addListener(ChannelFutureListener.CLOSE);
                 }
-        channelHandlerContext.writeAndFlush(msg + '\n').addListener(ChannelFutureListener.CLOSE);
+        //channelHandlerContext.writeAndFlush(msg + '\n').addListener(ChannelFutureListener.CLOSE);
     }
 
     public void copyFile(String sourcePath) {
