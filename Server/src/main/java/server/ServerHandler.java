@@ -1,10 +1,6 @@
 package server;
 
-import client.ClientHandler;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.channel.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -20,79 +16,67 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
-
-/**
- * Handles a server-side channel.
- */
 
 public class ServerHandler extends SimpleChannelInboundHandler<String> {
     private static final Logger LOGGER = LogManager.getLogger(Server.class);
-    private static final HashSet<ClientHandler> serverClients = new HashSet<>();
-    ClientHandler eachClient;
-
-
-    // List of connected client channels.
+    private static final Set<ClientConnection> serverClients = new HashSet<>();
+    ClientConnection clientConnection;
     static final List<Channel> channels = new ArrayList<>();
-    static final List<ClientHandler> listOfClients = new ArrayList<>();
 
-    /*
-     * Whenever client connects to server through channel, add his channel to the
-     * list of channels.
-     */
-    @Override
-    public void channelActive(final ChannelHandlerContext channelHandlerContext) {
-        eachClient = new ClientHandler();
-        serverClients.add(eachClient);
-        System.out.println("xx "+serverClients);
-        LOGGER.info(eachClient.getClientName()+" added to serverClients list");
-for(ClientHandler clientHandler:serverClients){
-    channelHandlerContext.writeAndFlush(clientHandler+ " ConnectedYYY");
-}
+    static class ClientConnection {
+        private final int int_random = ThreadLocalRandom.current().nextInt();
+        private final String clientName = "Client " + int_random;
+        private final DateTimeFormatter dateTimeFormat = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
+        private final LocalDateTime now = LocalDateTime.now();
+        private final String timeOfConnection = dateTimeFormat.format(now);
 
-
-        channels.add(channelHandlerContext.channel());
-        for (Channel eachChannel : channels) {
-            eachChannel.writeAndFlush("Client successfully connected to server");
+        public ClientConnection(Channel channel) {
         }
     }
 
-    /*
-     * When a message is received from client, send that message to all channels.
-     * For the sake of simplicity, currently we will send received chat message to
-     * all clients instead of one specific client. This code has scope to improve to
-     * send message to specific client as per senders choice.
-     */
+    //when channel is active
+    @Override
+    public void channelActive(final ChannelHandlerContext channelHandlerContext) {
+        Channel channel = channelHandlerContext.channel();
+        ClientConnection clientConnection = new ClientConnection(channel);
+        serverClients.add(clientConnection);
+
+        channels.add(channelHandlerContext.channel());
+        for (Channel eachChannel : channels) {
+            eachChannel.writeAndFlush(" Channel successfully connected to server "
+                    + clientConnection.clientName);
+        }
+    }
+
+    //main logic
     @Override
     public void channelRead0(ChannelHandlerContext channelHandlerContext, String msg) throws IOException {
         LOGGER.info("Server received command " + msg);
-            while (true){
-            if(msg==null) {
-               break;
-            }
-            else if(msg.equals("-exit")){
-                channelHandlerContext.writeAndFlush("User disconnected").addListener(ChannelFutureListener.CLOSE);
-                serverClients.remove(eachClient);
-                System.out.println("xx after remove "+serverClients);
-                LOGGER.info(eachClient.getClientName() + " have been removed from list of active connections");
-                //channelHandlerContext.disconnect();
+        while (true) {
+            if (msg == null) {
+                break;
+            } else if (msg.equals("-exit")) {
+                channelHandlerContext.writeAndFlush(clientConnection.clientName + " disconnected")
+                        .addListener(ChannelFutureListener.CLOSE);
+                serverClients.remove(clientConnection);
+                LOGGER.info(clientConnection.clientName + " have been removed from list of active connections");
                 channelHandlerContext.close();
                 break;
-            }
-            else if (msg.startsWith("-file ")) {
-                String sourcePath=msg.substring(6);
+            } else if (msg.startsWith("-file ")) {
+                String sourcePath = msg.substring(6);
                 copyFile(sourcePath);
+                channelHandlerContext.writeAndFlush("File saved to directory")
+                        .addListener(ChannelFutureListener.CLOSE);
                 LOGGER.info("File saved to directory");
                 channelHandlerContext.close();
                 break;
-            }
-               else {
+            } else {
                 channelHandlerContext.writeAndFlush("Server received unknown command_ " + msg)
                         .addListener(ChannelFutureListener.CLOSE);
-                //throw new IOException();
             }
-                }
-        //channelHandlerContext.writeAndFlush(msg + '\n').addListener(ChannelFutureListener.CLOSE);
+        }
     }
 
     public void copyFile(String sourcePath) {
@@ -108,13 +92,9 @@ for(ClientHandler clientHandler:serverClients){
         }
     }
 
-    /*
-     * In case of exception, close channel. One may choose to custom handle exception
-     * & have alternative logical flows.
-     */
     @Override
     public void exceptionCaught(ChannelHandlerContext channelHandlerContext, Throwable cause) {
-        LOGGER.info("Closing connection for " +eachClient.getClientName());
+        LOGGER.info("Closing connection for " + clientConnection.clientName);
         cause.printStackTrace();
         channelHandlerContext.close();
     }

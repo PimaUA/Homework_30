@@ -15,13 +15,11 @@ import org.apache.logging.log4j.Logger;
 
 public class Server {
     private static final Logger LOGGER = LogManager.getLogger(Server.class);
-    private static final int PORT=5555;
 
-    public static void main(String[] args) throws InterruptedException {
+    private void configureAndStartServer(int port) throws InterruptedException {
         /*
          * Configure the server.
          */
-
         // Create boss & worker groups. Boss accepts connections from client. Worker
         // handles further communication through connections.
         EventLoopGroup bossGroup = new NioEventLoopGroup(1);
@@ -48,7 +46,7 @@ public class Server {
                     });
 
             // Start the server.
-            ChannelFuture channelFuture = serverBootstrap.bind(PORT).sync();
+            ChannelFuture channelFuture = serverBootstrap.bind(port).sync();
             LOGGER.info("Server started. Ready to accept clients.");
 
             // Wait until the server socket is closed.
@@ -58,5 +56,10 @@ public class Server {
             bossGroup.shutdownGracefully();
             workerGroup.shutdownGracefully();
         }
+    }
+
+    public static void main(String[] args) throws InterruptedException {
+        Server server1 = new Server();
+        server1.configureAndStartServer(5555);
     }
 }
