@@ -11,28 +11,27 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.jmx.Server;
 
-import java.io.IOException;
-import java.util.Scanner;
-import java.util.concurrent.ThreadLocalRandom;
-
 public class Client {
     private static final Logger LOGGER = LogManager.getLogger(Server.class);
     private Bootstrap bootstrap;
     private ChannelFuture f;
-
+    private Channel channel;
+    static EventLoopGroup group;
+    String host;
+    int port;
 
     public Client() {
         bootstrap = new Bootstrap();
     }
 
-    public void connect(String host, int port,String msg) throws Exception {
+    public void configureClient(String host, int port) throws InterruptedException {
         /*
          * Configure the client.
          */
         // Since this is client, it doesn't need boss group. Create single group.
-        EventLoopGroup group = new NioEventLoopGroup();
-        try {
-            bootstrap = new Bootstrap();
+        group = new NioEventLoopGroup();
+        //try {
+            //bootstrap = new Bootstrap();
             bootstrap.group(group) // Set EventLoopGroup to handle all events for client.
                     .channel(NioSocketChannel.class)// Use NIO to accept new connections.
                     .handler(new ChannelInitializer<SocketChannel>() {
@@ -52,39 +51,68 @@ public class Client {
                         }
                     });
 // Start the client.
-          ChannelFuture f = bootstrap.connect(host, port).sync();
-
+        // f = bootstrap.connect(host, port).sync();
+        //LOGGER.info("Client started");
             //send message to server
-            Channel channel = f.sync().channel();
-            channel.writeAndFlush(msg);
-            channel.flush();
+            //Channel channel = f.sync().channel();
+            //channel.writeAndFlush(msg);
+            //channel.flush();
 
 // Wait until the connection is closed(port)
-            f.channel().closeFuture().sync();
+           // f.channel().closeFuture().sync();
 
-        } finally {
+       // } finally {
             // Shut down the event loop to terminate all threads.
-            group.shutdownGracefully();
-        }
+           // group.shutdownGracefully();
+       // }
     }
 
-
-
-    //????
-    public String sendCommand(String msg) throws InterruptedException {
-        Channel channel = f.sync().channel();
-        channel.writeAndFlush(msg);
+    public void sendCommand(String host, int port,String command) throws InterruptedException {
+        // Start the client.
+        f = bootstrap.connect(host, port).sync();
+        LOGGER.info("Client started");
+        channel = f.sync().channel();
+        channel.writeAndFlush(command);
         channel.flush();
-        return msg;
-    }
+// Wait until the connection is closed(port)
+        f.channel().closeFuture().sync();
+        if(command.equals("-exit")){
+            closeConnection();
+    }}
+
+public void closeConnection() throws InterruptedException {
+    // Wait until the connection is closed(port)
+    //f.channel().closeFuture().sync();
+    // Shut down the event loop to terminate all threads.
+    LOGGER.info("---Connection closed");
+    group.shutdownGracefully();
+}
+
 
     public static void main(String[] args) throws Exception {
 Client client1=new Client();
-client1.connect("127.0.0.1",5555,"Hey Ho");
+client1.configureClient("127.0.0.1",5555);
+        client1.sendCommand("127.0.0.1",5555,"-file C:/Users/Sasha/Downloads/file1.txt");
+        client1.sendCommand("127.0.0.1",5555,"Hello");
+        //client1.closeConnection();
+       // client1.sendCommand("127.0.0.1",5555,"-exit");
+
+//client1.sendCommand("-file C:/Users/Sasha/Downloads/file1.txt");
+//client1.sendCommand("Hey");
+        //client1.sendCommand("-exit");
+//client1.closeConnection();
         //client1.connect("127.0.0.1",5555,"-file C:/Users/Sasha/Downloads/file1.txt");
 
-        Client client2=new Client();
-        client2.connect("127.0.0.1",5555,"Let's Go!");
+       /*Client client2=new Client();
+        client2.configureClient();
+        client2.sendCommand("127.0.0.1",5555,"-file C:/Users/Sasha/Downloads/file2.txt");
+        client2.sendCommand("127.0.0.1",5555,"-exit");*/
+       //client2.connectClient("127.0.0.1",5555);
+        //client2.sendCommand("-exit");
+        //client2.sendCommand("-file C:/Users/Sasha/Downloads/file2.txt");
+        //client2.closeConnection();
+        //Client client2=new Client();
+        //client2.connect("127.0.0.1",5555,"Let's Go!");
         //client2.connect("127.0.0.1",5555,"-file C:/Users/Sasha/Downloads/file2.txt");
     }
 }

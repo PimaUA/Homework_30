@@ -29,10 +29,12 @@ import java.util.concurrent.ThreadLocalRandom;
 public class ServerHandler extends SimpleChannelInboundHandler<String> {
     private static final Logger LOGGER = LogManager.getLogger(Server.class);
     private static final HashSet<ClientHandler> serverClients = new HashSet<>();
+    ClientHandler eachClient;
 
 
     // List of connected client channels.
     static final List<Channel> channels = new ArrayList<>();
+    static final List<ClientHandler> listOfClients = new ArrayList<>();
 
     /*
      * Whenever client connects to server through channel, add his channel to the
@@ -40,12 +42,18 @@ public class ServerHandler extends SimpleChannelInboundHandler<String> {
      */
     @Override
     public void channelActive(final ChannelHandlerContext channelHandlerContext) {
-        ClientHandler eachClient = new ClientHandler();
+        eachClient = new ClientHandler();
         serverClients.add(eachClient);
-        LOGGER.info("Client  " + eachClient.getClientName()+" added to serverClients list");
+        System.out.println("xx "+serverClients);
+        LOGGER.info(eachClient.getClientName()+" added to serverClients list");
+for(ClientHandler clientHandler:serverClients){
+    channelHandlerContext.writeAndFlush(clientHandler+ " ConnectedYYY");
+}
+
+
         channels.add(channelHandlerContext.channel());
         for (Channel eachChannel : channels) {
-            eachChannel.writeAndFlush(eachClient.getClientName()+" successfully connected to server\n");
+            eachChannel.writeAndFlush("Client successfully connected to server");
         }
     }
 
@@ -56,16 +64,18 @@ public class ServerHandler extends SimpleChannelInboundHandler<String> {
      * send message to specific client as per senders choice.
      */
     @Override
-    public void channelRead0(ChannelHandlerContext channelHandlerContext, String msg) {
-        LOGGER.info("Server received - " + msg);
+    public void channelRead0(ChannelHandlerContext channelHandlerContext, String msg) throws IOException {
+        LOGGER.info("Server received command " + msg);
             while (true){
             if(msg==null) {
                break;
             }
             else if(msg.equals("-exit")){
                 channelHandlerContext.writeAndFlush("User disconnected").addListener(ChannelFutureListener.CLOSE);
-                serverClients.remove(this);
-                LOGGER.info(this + " have been removed from list of active connections");
+                serverClients.remove(eachClient);
+                System.out.println("xx after remove "+serverClients);
+                LOGGER.info(eachClient.getClientName() + " have been removed from list of active connections");
+                //channelHandlerContext.disconnect();
                 channelHandlerContext.close();
                 break;
             }
@@ -73,10 +83,14 @@ public class ServerHandler extends SimpleChannelInboundHandler<String> {
                 String sourcePath=msg.substring(6);
                 copyFile(sourcePath);
                 LOGGER.info("File saved to directory");
+                channelHandlerContext.close();
                 break;
             }
-                channelHandlerContext.writeAndFlush("Server received message "+msg + '\n')
+               else {
+                channelHandlerContext.writeAndFlush("Server received unknown command_ " + msg)
                         .addListener(ChannelFutureListener.CLOSE);
+                //throw new IOException();
+            }
                 }
         //channelHandlerContext.writeAndFlush(msg + '\n').addListener(ChannelFutureListener.CLOSE);
     }
@@ -100,7 +114,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<String> {
      */
     @Override
     public void exceptionCaught(ChannelHandlerContext channelHandlerContext, Throwable cause) {
-        LOGGER.info("Closing connection for client XXXXXX- " + channelHandlerContext);
+        LOGGER.info("Closing connection for " +eachClient.getClientName());
         cause.printStackTrace();
         channelHandlerContext.close();
     }

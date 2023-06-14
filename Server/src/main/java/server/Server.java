@@ -49,7 +49,7 @@ public class Server {
 
             // Start the server.
             ChannelFuture channelFuture = serverBootstrap.bind(PORT).sync();
-            LOGGER.info("Chat Server started. Ready to accept chat clients.");
+            LOGGER.info("Server started. Ready to accept clients.");
 
             // Wait until the server socket is closed.
             channelFuture.channel().closeFuture().sync();

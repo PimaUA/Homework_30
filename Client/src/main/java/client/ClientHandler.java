@@ -19,23 +19,21 @@ public class ClientHandler extends SimpleChannelInboundHandler<String> {
     private final String timeOfConnection = dateTimeFormat.format(now);
 
 
-    //???
-    //@Override
-    //public void channelActive(ChannelHandlerContext ctx) throws Exception {
-      //  ctx.writeAndFlush(clientName + " wants to connect\n");
-    //}
-
-   // @Override
-    //public void channelInactive(ChannelHandlerContext ctx){
-       // serverClients.remove(this);
-        //System.out.println("Client removed");
-    //}
-
     @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        System.out.println("Error caught in the communication service: " + cause);
-        ctx.close();
+    public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        /*eachClient = new ClientHandler();
+        serverClients.add(eachClient);
+        System.out.println("xx "+serverClients);
+        LOGGER.info(eachClient.getClientName()+" added to serverClients list");*/
+       /* for (ClientHandler eachClient : serverClients) {
+            eachClient.writeAndFlush(eachClient.getClientName()+" successfully connected to server");
+        }*/
     }
+
+    /*@Override
+    public void channelInactive(ChannelHandlerContext ctx){
+        System.out.println("Client removed");
+    }*/
 
     //message received from server
   @Override
@@ -43,6 +41,13 @@ public class ClientHandler extends SimpleChannelInboundHandler<String> {
         LOGGER.info("Message from server: " + msg);
         //ctx.writeAndFlush(msg);
 
+    }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+        System.out.println("Error caught in the communication service: " + cause);
+        cause.printStackTrace();
+        ctx.close();
     }
 
     public String getClientName() {
