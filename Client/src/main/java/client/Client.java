@@ -77,5 +77,11 @@ public class Client {
         client3.startClientExecution("127.0.0.1", 5555, "hello");
         client3.startClientExecution("127.0.0.1", 5555, "-exit");
         client3.closeConnection();
+
+        Client client4 = new Client();
+        client4.startClientExecution("127.0.0.1", 5555, "-file C:/Users/Sasha/Downloads/file4.txt");
+        client4.startClientExecution("127.0.0.1", 5555, "hello");
+        client4.startClientExecution("127.0.0.1", 5555, "-exit");
+        client4.closeConnection();
     }
 }
