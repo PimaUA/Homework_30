@@ -20,7 +20,7 @@ class ClientHandlerTest {
     @Test
     public void nettyTest() {
         EmbeddedChannel channel = new EmbeddedChannel(new StringDecoder(StandardCharsets.UTF_8));
-        channel.writeInbound(Unpooled.wrappedBuffer(new byte[]{(byte)0xE2,(byte)0x98,(byte)0xA2}));
+        channel.writeInbound(Unpooled.wrappedBuffer(new byte[]{(byte) 0xE2, (byte) 0x98, (byte) 0xA2}));
         String myObject = channel.readInbound();
         // Perform checks on your object
         assertEquals("☢", myObject);
@@ -45,8 +45,8 @@ class ClientHandlerTest {
                 new DelimiterBasedFrameDecoder(8192, true, Delimiters.lineDelimiter()));
 
         ch.writeInbound(Unpooled.copiedBuffer("first\r\nsecond\nthird", CharsetUtil.US_ASCII));
-        assertEquals("first",((ByteBuf) ch.readInbound()).toString(CharsetUtil.US_ASCII));
-        assertEquals("second",((ByteBuf) ch.readInbound()).toString(CharsetUtil.US_ASCII));
+        assertEquals("first", ((ByteBuf) ch.readInbound()).toString(CharsetUtil.US_ASCII));
+        assertEquals("second", ((ByteBuf) ch.readInbound()).toString(CharsetUtil.US_ASCII));
         assertNull(ch.readInbound());
         ch.finish();
 

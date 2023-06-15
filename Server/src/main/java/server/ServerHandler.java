@@ -40,7 +40,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<String> {
     @Override
     public void channelActive(final ChannelHandlerContext channelHandlerContext) {
         Channel channel = channelHandlerContext.channel();
-        ClientConnection clientConnection = new ClientConnection(channel);
+        clientConnection = new ClientConnection(channel);
         serverClients.add(clientConnection);
 
         channels.add(channelHandlerContext.channel());
@@ -52,7 +52,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<String> {
 
     //main logic
     @Override
-    public void channelRead0(ChannelHandlerContext channelHandlerContext, String msg) throws IOException {
+    public void channelRead0(ChannelHandlerContext channelHandlerContext, String msg) {
         LOGGER.info("Server received command " + msg);
         while (true) {
             if (msg == null) {

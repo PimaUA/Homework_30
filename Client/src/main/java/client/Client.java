@@ -51,9 +51,9 @@ public class Client {
         Channel channel = channelFuture.sync().channel();
         channel.writeAndFlush(command);
         channel.flush();
-        if(command.equals("-exit")){
+        /*if(command.equals("-exit")){
             closeConnection();
-        }
+        }*/
     }
 
     public void closeConnection() {
@@ -66,20 +66,13 @@ public class Client {
         Client client1 = new Client();
         client1.startClientExecution("127.0.0.1", 5555, "-file C:/Users/Sasha/Downloads/file1.txt");
         client1.startClientExecution("127.0.0.1", 5555, "hello");
-        client1.closeConnection();
         client1.startClientExecution("127.0.0.1", 5555, "-exit");
+        client1.closeConnection();
 
-
-       /*Client client2=new Client();
-        client2.configureClient();
-        client2.sendCommand("127.0.0.1",5555,"-file C:/Users/Sasha/Downloads/file2.txt");
-        client2.sendCommand("127.0.0.1",5555,"-exit");*/
-        //client2.connectClient("127.0.0.1",5555);
-        //client2.sendCommand("-exit");
-        //client2.sendCommand("-file C:/Users/Sasha/Downloads/file2.txt");
-        //client2.closeConnection();
-        //Client client2=new Client();
-        //client2.connect("127.0.0.1",5555,"Let's Go!");
-        //client2.connect("127.0.0.1",5555,"-file C:/Users/Sasha/Downloads/file2.txt");
+        Client client2 = new Client();
+        client2.startClientExecution("127.0.0.1", 5555, "-file C:/Users/Sasha/Downloads/file2.txt");
+        client2.startClientExecution("127.0.0.1", 5555, "hello");
+        client2.startClientExecution("127.0.0.1", 5555, "-exit");
+        client2.closeConnection();
     }
 }
