@@ -51,9 +51,6 @@ public class Client {
         Channel channel = channelFuture.sync().channel();
         channel.writeAndFlush(command);
         channel.flush();
-        /*if(command.equals("-exit")){
-            closeConnection();
-        }*/
     }
 
     public void closeConnection() {
